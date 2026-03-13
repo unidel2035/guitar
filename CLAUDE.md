@@ -83,3 +83,14 @@ src/
 - Не создавать файлы вне `src/` без необходимости
 - Не хардкодить ноты — использовать хроматическую шкалу и вычисления
 - Не коммитить `node_modules/`, `.env`, `dist/`
+
+---
+
+Issue to solve: https://github.com/unidel2035/guitar/issues/1
+Your prepared branch: issue-1-456ac7682c0f
+Your prepared working directory: /tmp/gh-issue-solver-1773389976753
+
+Proceed.
+
+
+Run timestamp: 2026-03-13T08:19:39.342Z
