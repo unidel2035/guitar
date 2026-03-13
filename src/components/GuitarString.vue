@@ -16,6 +16,14 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  stringIndex: {
+    type: Number,
+    default: 0,
+  },
+  stringCount: {
+    type: Number,
+    default: 6,
+  },
 })
 
 const notes = computed(() => {
@@ -23,25 +31,46 @@ const notes = computed(() => {
   return Array.from({ length: props.frets + 1 }, (_, i) => NOTES[(startIndex + i) % 12])
 })
 
+// String thickness varies: string 0 (high e) is thinnest, string 5 (low E) is thickest
+const stringThickness = computed(() => {
+  const thicknesses = [1, 1.5, 2, 2.5, 3, 3.5]
+  return thicknesses[props.stringIndex] ?? 2
+})
+
 function isHighlighted(note) {
   return props.highlightedNotes.includes(note)
+}
+
+function isRootNote(note) {
+  return props.highlightedNotes.length > 0 && props.highlightedNotes[0] === note
 }
 </script>
 
 <template>
   <div class="guitar-string">
-    <div class="guitar-string__frets">
+    <div class="guitar-string__label">{{ tuning }}</div>
+    <div class="guitar-string__body">
+      <!-- The string line runs across the whole body -->
       <div
-        v-for="(note, index) in notes"
-        :key="index"
-        class="guitar-string__fret"
-        :class="{
-          'guitar-string__fret--open': index === 0,
-          'guitar-string__fret--highlighted': isHighlighted(note),
-        }"
-      >
-        <span class="guitar-string__note">{{ note }}</span>
-        <div v-if="index > 0" class="guitar-string__wire" />
+        class="guitar-string__line"
+        :style="{ height: stringThickness + 'px' }"
+      />
+      <!-- Fret cells (open + fretted) -->
+      <div class="guitar-string__frets">
+        <div
+          v-for="(note, index) in notes"
+          :key="index"
+          class="guitar-string__fret"
+          :class="{ 'guitar-string__fret--open': index === 0 }"
+        >
+          <div
+            v-if="isHighlighted(note)"
+            class="guitar-string__dot"
+            :class="{ 'guitar-string__dot--root': isRootNote(note) }"
+          >
+            <span class="guitar-string__dot-label">{{ note }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -51,57 +80,82 @@ function isHighlighted(note) {
 .guitar-string {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0;
+  height: 2.75rem;
+}
+
+.guitar-string__label {
+  width: 2rem;
+  text-align: right;
+  padding-right: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--p-text-muted-color);
+  flex-shrink: 0;
+}
+
+.guitar-string__body {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.guitar-string__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--p-surface-500) 60%, white),
+    var(--p-surface-600),
+    color-mix(in srgb, var(--p-surface-500) 60%, white)
+  );
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
 }
 
 .guitar-string__frets {
   display: flex;
-  align-items: center;
+  width: 100%;
   position: relative;
-}
-
-.guitar-string__fret {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-right: 2px solid var(--p-surface-400);
-  background: var(--p-surface-100);
-  cursor: default;
-  transition: background 0.15s;
-}
-
-.guitar-string__fret--open {
-  border-right: 3px solid var(--p-surface-600);
-  background: var(--p-surface-50);
-}
-
-.guitar-string__fret--highlighted {
-  background: var(--p-primary-100);
-}
-
-.guitar-string__note {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--p-text-color);
   z-index: 1;
 }
 
-.guitar-string__fret--highlighted .guitar-string__note {
-  color: var(--p-primary-700);
+.guitar-string__fret {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
 }
 
-.guitar-string__wire {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--p-surface-500);
-  transform: translateY(-50%);
-  z-index: 0;
+.guitar-string__fret--open {
+  flex: 0 0 2rem;
+}
+
+.guitar-string__dot {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--p-primary-500);
+  border: 2px solid var(--p-primary-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.guitar-string__dot--root {
+  background: var(--p-primary-700);
+  border-color: var(--p-primary-900);
+}
+
+.guitar-string__dot-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
 }
 </style>
